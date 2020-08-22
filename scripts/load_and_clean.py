@@ -43,6 +43,8 @@ bad_int_columns = [
 innovative_inn_list = [
     6163084897,
     6142019008,
+    6161021690,
+    6154026578,
 ]
 innov_name_tags = [
     "нпп",
@@ -54,6 +56,40 @@ innov_name_tags = [
     "фирма",
     "инжиниринг",
     "лаборатория",
+]
+bad_subrubrics = [
+    "Авиабилеты",
+    "Гостиницы",
+    "Дезинфекция, дезинсекция, дератизация",
+    "Дизайн рекламы",
+    "Директ-мэйл / Директ mail",
+    "Косметические услуги",
+    "Магазины подарков",
+    "Продовольственные магазины",
+    "Продукты питания оптом",
+    "Продукты пчеловодства",
+    "Ремонт компьютерной техники",
+    "Ремонт мобильных устройств связи",
+    "Спортивные клубы и секции",
+    "Товары для творчества и рукоделия",
+    "Услуги гравировки",
+    "Установка входных групп",
+    "CМИ / Средства массовой информации",
+    "Системы отопления, водоснабжения, канализации",
+    "Нефтепродукты, Газ, ГСМ",
+    "Услуги телефонной связи",
+    "Компьютерный ремонт и услуги",
+    "Фотомагазины",
+]
+bad_rubrics = [
+    "Магазин одежды и обуви",
+    "Повседневные, коммунальные и ритуальные услуги",
+    "Социальная помощь / Благотворительность",
+    "Торговые центры, комплексы / Спецмагазины",
+    "Хозяйственные товары / Канцелярия / Упаковка",
+    "Юридические / Бизнес / Финансовые услуги",
+    "CМИ / Средства массовой информации",
+    "Юридические / Бизнес / Финансовые услуги",
 ]
 
 
@@ -232,9 +268,37 @@ def _filter_data_based_on_okved(x: Optional[str]) -> bool:
         return False
     elif "электромонтаж" in x:
         return False
+    elif "магазин" in x and "одежд" in x:
+        return False
+    elif "салон" in x and "красот" in x:
+        return False
 
     else:
         return True
+
+
+def _bad_name_filter(x: Optional[str]) -> bool:
+    if x is None:
+        return False
+
+    bad_names_tags = [
+        "продаж",
+        "касса",
+        "Донской Сувенир",
+        "астерская",
+        "торгов",
+        "мини-маркет",
+        "палата",
+        "Ростовской",
+        "союз",
+        "красот",
+        "студи",
+    ]
+
+    if x in bad_names_tags:
+        return False
+
+    return True
 
 
 def _innovative_name_tag(x: Optional[str]) -> int:
@@ -248,6 +312,26 @@ def _innovative_name_tag(x: Optional[str]) -> int:
     return 0
 
 
+def _filter_bad_subrubrics(x: Optional[str]) -> bool:
+    if x is None:
+        return False
+
+    if x in bad_subrubrics:
+        return False
+
+    return True
+
+
+def _filter_bad_rubrics(x: Optional[str]) -> bool:
+    if x is None:
+        return False
+
+    if x in bad_rubrics:
+        return False
+
+    return True
+
+
 def load_and_clean_data() -> pd.DataFrame:
     df = _get_data(CONN_URL, LOAD_QUERY)
 
@@ -257,6 +341,7 @@ def load_and_clean_data() -> pd.DataFrame:
 
     df["has_soc_net"] = df["soc_networks"].apply(lambda x: int(x is not None))
     df["has_website"] = df["website"].apply(lambda x: int(x is not None))
+    df = df[df["website"].apply(lambda x: (x is not None) and ("narod.ru" not in x))]
     df = df.drop(columns=["soc_networks", "website"])
 
     df = _type_cast(
@@ -275,5 +360,13 @@ def load_and_clean_data() -> pd.DataFrame:
 
     for company in innovative_inn_list:
         df.loc[df["inn"] == company, "target"] = 1
+
+    df["reg_code"] = df["ogrn"].astype("str").str.slice(3, 5)
+    df = df[df["sub_rubric"].apply(_filter_bad_subrubrics)]
+    df = df[df["rubric"].apply(_filter_bad_rubrics)]
+    df = df[df["name"].apply(_bad_name_filter)]
+
+    df["employee_number"] = df["employee_number"].fillna(0).apply(np.log1p)
+    df["age"] = df["age"].fillna(0)
 
     return df
