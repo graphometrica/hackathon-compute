@@ -198,3 +198,4 @@ tags
 *.json
 *.html
 explanations*
+model_file*
