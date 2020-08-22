@@ -90,6 +90,66 @@ bad_rubrics = [
     "CМИ / Средства массовой информации",
     "Юридические / Бизнес / Финансовые услуги",
 ]
+stop_words = [
+    ["табак"],
+    ["табач"],
+    ["алког"],
+    ["автотатнспорт"],
+    ["торговл"],
+    ["недвиж"],
+    ["реклам"],
+    ["консультир"],
+    ["религ"],
+    ["турист"],
+    ["строит"],
+    ["парикмах"],
+    ["самоуправлен"],
+    ["общественн"],
+    ["вспомогательная"],
+    ["прочих вспомогательных"],
+    ["архитектур"],
+    ["гостин"],
+    ["посредничество"],
+    ["полиграфич"],
+    ["бухгалтер"],
+    ["кондитер"],
+    ["санитарно"],
+    ["издание газет"],
+    ["зрелищно-развлекательная"],
+    ["ресторанов и кафе с полным ресторанным обслуживанием"],
+    ["издательская"],
+    ["ювелирных"],
+    ["кинофильм"],
+    ["карьеров"],
+    ["аудит"],
+    ["прокуратур"],
+    ["финанс"],
+    ["подбору персонала"],
+    ["радиовещан"],
+    ["малярных и стекольных"],
+    ["искусств"],
+    ["музеев"],
+    ["чистке и уборке"],
+    ["мебел"],
+    ["займ"],
+    ["архив"],
+    ["фотограф"],
+    ["подача напитков"],
+    ["клубного типа"],
+    ["рисков и ущерб"],
+    ["прочих персональных услуг"],
+    ["судебно"],
+    ["дискотек"],
+    ["телефонн"],
+    ["электромонтаж"],
+    ["торгов", "неспец"],
+    ["област", "прав"],
+    ["строите", "здани"],
+    ["жил", "фонд"],
+    ["част" "охран"],
+    ["магазин", "одежд"],
+    ["салон", "красот"],
+]
 
 
 def _get_data(url: str, query: str) -> pd.DataFrame:
@@ -155,125 +215,17 @@ def _filter_data_based_on_okved(x: Optional[str]) -> bool:
 
     x = x.lower()
 
-    if "табак" in x:
-        return False
-    elif "табач" in x:
-        return False
-    elif "алког" in x:
-        return False
-    elif "торгов" in x and "неспец" in x:
-        return False
-    elif "област" in x and "прав" in x:
-        return False
-    elif "строите" in x and "здани" in x:
-        return False
-    elif "жил" in x and "фонд" in x:
-        return False
-    elif "автотатнспорт" in x:
-        return False
-    elif "торговл" in x:
-        return False
-    elif "недвиж" in x:
-        return False
-    elif "реклам" in x:
-        return False
-    elif "част" and "охран" in x:
-        return False
-    elif "консультир" in x:
-        return False
-    elif "религ" in x:
-        return False
-    elif "турист" in x:
-        return False
-    elif "строит" in x:
-        return False
-    elif "парикмах" in x:
-        return False
-    elif "самоуправлен" in x:
-        return False
-    elif "общественн" in x:
-        return False
-    elif "вспомогательная" in x:
-        return False
-    elif "прочих вспомогательных" in x:
-        return False
-    elif "архитектур" in x:
-        return False
-    elif "гостин" in x:
-        return False
-    elif "посредничество" in x:
-        return False
-    elif "полиграфич" in x:
-        return False
-    elif "бухгалтер" in x:
-        return False
-    elif "кондитер" in x:
-        return False
-    elif "санитарно" in x:
-        return False
-    elif "издание газет" in x:
-        return False
-    elif "зрелищно-развлекательная" in x:
-        return False
-    elif "ресторанов и кафе с полным ресторанным обслуживанием" in x:
-        return False
-    elif "издательская" in x:
-        return False
-    elif "ювелирных" in x:
-        return False
-    elif "кинофильм" in x:
-        return False
-    elif "карьеров" in x:
-        return False
-    elif "аудит" in x:
-        return False
-    elif "прокуратур" in x:
-        return False
-    elif "финанс" in x:
-        return False
-    elif "подбору персонала" in x:
-        return False
-    elif "радиовещан" in x:
-        return False
-    elif "малярных и стекольных" in x:
-        return False
-    elif "искусств" in x:
-        return False
-    elif "музеев" in x:
-        return False
-    elif "чистке и уборке" in x:
-        return False
-    elif "мебел" in x:
-        return False
-    elif "займ" in x:
-        return False
-    elif "архив" in x:
-        return False
-    elif "фотограф" in x:
-        return False
-    elif "подача напитков" in x:
-        return False
-    elif "клубного типа" in x:
-        return False
-    elif "рисков и ущерб" in x:
-        return False
-    elif "прочих персональных услуг" in x:
-        return False
-    elif "судебно" in x:
-        return False
-    elif "дискотек" in x:
-        return False
-    elif "телефонн" in x:
-        return False
-    elif "электромонтаж" in x:
-        return False
-    elif "магазин" in x and "одежд" in x:
-        return False
-    elif "салон" in x and "красот" in x:
-        return False
+    for i in stop_words:
+        if _word_contain_all_array_elements(x, i):
+            return False
+    return True
 
-    else:
-        return True
+
+def _word_contain_all_array_elements(word, array) -> bool:
+    for i in array:
+        if i not in word:
+            return False
+    return True
 
 
 def _bad_name_filter(x: Optional[str]) -> bool:
