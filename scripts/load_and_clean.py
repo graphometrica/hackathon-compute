@@ -40,6 +40,21 @@ bad_int_columns = [
     "employee_number",
     "proceed",
 ]
+innovative_inn_list = [
+    6163084897,
+    6142019008,
+]
+innov_name_tags = [
+    "нпп",
+    "технологии",
+    "нпо",
+    "системы",
+    "нтц",
+    "нпф",
+    "фирма",
+    "инжиниринг",
+    "лаборатория",
+]
 
 
 def _get_data(url: str, query: str) -> pd.DataFrame:
@@ -99,6 +114,140 @@ def _type_cast(df: pd.DataFrame, col_list: Iterable[str]) -> pd.DataFrame:
     return df
 
 
+def _filter_data_based_on_okved(x: Optional[str]) -> bool:
+    if x is None:
+        return False
+
+    x = x.lower()
+
+    if "табак" in x:
+        return False
+    elif "табач" in x:
+        return False
+    elif "алког" in x:
+        return False
+    elif "торгов" in x and "неспец" in x:
+        return False
+    elif "област" in x and "прав" in x:
+        return False
+    elif "строите" in x and "здани" in x:
+        return False
+    elif "жил" in x and "фонд" in x:
+        return False
+    elif "автотатнспорт" in x:
+        return False
+    elif "торговл" in x:
+        return False
+    elif "недвиж" in x:
+        return False
+    elif "реклам" in x:
+        return False
+    elif "част" and "охран" in x:
+        return False
+    elif "консультир" in x:
+        return False
+    elif "религ" in x:
+        return False
+    elif "турист" in x:
+        return False
+    elif "строит" in x:
+        return False
+    elif "парикмах" in x:
+        return False
+    elif "самоуправлен" in x:
+        return False
+    elif "общественн" in x:
+        return False
+    elif "вспомогательная" in x:
+        return False
+    elif "прочих вспомогательных" in x:
+        return False
+    elif "архитектур" in x:
+        return False
+    elif "гостин" in x:
+        return False
+    elif "посредничество" in x:
+        return False
+    elif "полиграфич" in x:
+        return False
+    elif "бухгалтер" in x:
+        return False
+    elif "кондитер" in x:
+        return False
+    elif "санитарно" in x:
+        return False
+    elif "издание газет" in x:
+        return False
+    elif "зрелищно-развлекательная" in x:
+        return False
+    elif "ресторанов и кафе с полным ресторанным обслуживанием" in x:
+        return False
+    elif "издательская" in x:
+        return False
+    elif "ювелирных" in x:
+        return False
+    elif "кинофильм" in x:
+        return False
+    elif "карьеров" in x:
+        return False
+    elif "аудит" in x:
+        return False
+    elif "прокуратур" in x:
+        return False
+    elif "финанс" in x:
+        return False
+    elif "подбору персонала" in x:
+        return False
+    elif "радиовещан" in x:
+        return False
+    elif "малярных и стекольных" in x:
+        return False
+    elif "искусств" in x:
+        return False
+    elif "музеев" in x:
+        return False
+    elif "чистке и уборке" in x:
+        return False
+    elif "мебел" in x:
+        return False
+    elif "займ" in x:
+        return False
+    elif "архив" in x:
+        return False
+    elif "фотограф" in x:
+        return False
+    elif "подача напитков" in x:
+        return False
+    elif "клубного типа" in x:
+        return False
+    elif "рисков и ущерб" in x:
+        return False
+    elif "прочих персональных услуг" in x:
+        return False
+    elif "судебно" in x:
+        return False
+    elif "дискотек" in x:
+        return False
+    elif "телефонн" in x:
+        return False
+    elif "электромонтаж" in x:
+        return False
+
+    else:
+        return True
+
+
+def _innovative_name_tag(x: Optional[str]) -> int:
+    if x is None:
+        return 0
+
+    for tag in innov_name_tags:
+        if tag in x:
+            return 1
+
+    return 0
+
+
 def load_and_clean_data() -> pd.DataFrame:
     df = _get_data(CONN_URL, LOAD_QUERY)
 
@@ -117,5 +266,14 @@ def load_and_clean_data() -> pd.DataFrame:
 
     df["age"] = 2020 - df["create_year"]
     df["has_filial"] = df["has_filial"].apply(lambda x: int(x is not None))
+
+    pure_okveds = set(filter(_filter_data_based_on_okved, df["okved_name"].unique()))
+    df = df[df["okved_name"].isin(pure_okveds)]
+
+    df["inn"] = df["inn"].astype("int")
+    df["innovative_name_tag"] = df["name"].apply(_innovative_name_tag)
+
+    for company in innovative_inn_list:
+        df.loc[df["inn"] == company, "target"] = 1
 
     return df
