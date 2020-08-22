@@ -375,4 +375,6 @@ def load_and_clean_data() -> pd.DataFrame:
     df["employee_number"] = df["employee_number"].fillna(0).apply(np.log1p)
     df["age"] = df["age"].fillna(0)
 
+    df = df.fillna({"city": "NONE", "okved_name": "NONE", "rubric": "NONE",}).fillna(0)
+
     return df

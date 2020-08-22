@@ -193,7 +193,6 @@ tags
 
 # Other
 *.csv
-*.html
 *.tar*
 *.gz
 *.json
