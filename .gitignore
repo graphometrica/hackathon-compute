@@ -196,3 +196,5 @@ tags
 *.tar*
 *.gz
 *.json
+*.html
+explanations*
