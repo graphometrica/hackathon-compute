@@ -6,11 +6,11 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from flask import Flask, render_template, request
+from flask import app as flask_app, render_template, request
 from interpret import preserve
 
 
-app = Flask(__name__)
+App = flask_app.Flask(__name__)
 root_path = Path(__file__).parent.parent
 
 
@@ -25,7 +25,7 @@ with root_path.joinpath("model_file").open("br") as file:
     model = pickle.load(file)
 
 
-@app.route("/explain/")
+@App.route("/explain/")
 def get_explanation():
     inn = int(request.args.get("inn"))
     explanation = model.explain_local(data.loc[data["inn"] == inn, train_cols])
@@ -33,4 +33,4 @@ def get_explanation():
 
 
 if __name__ == "__main__":
-    app.run()
+    App.run()
