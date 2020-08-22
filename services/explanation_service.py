@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from flask import app as flask_app, render_template, request
+from flask import app as flask_app, render_template, request, abort
 from interpret import preserve
 
 
@@ -28,8 +28,12 @@ with root_path.joinpath("model_file").open("br") as file:
 @App.route("/explain/")
 def get_explanation():
     inn = int(request.args.get("inn"))
-    explanation = model.explain_local(data.loc[data["inn"] == inn, train_cols])
-    return explanation.visualize(0).to_html()
+
+    try:
+        explanation = model.explain_local(data.loc[data["inn"] == inn, train_cols])
+        return explanation.visualize(0).to_html()
+    except:
+        abort(404)
 
 
 if __name__ == "__main__":
