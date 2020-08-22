@@ -24,7 +24,6 @@ hyphen_columns = [
     "profit_2015",
 ]
 int_type_columns = [
-    "inn",
     "ogrn",
     "employee_number",
     "proceed",
@@ -334,15 +333,23 @@ def _filter_bad_rubrics(x: Optional[str]) -> bool:
 
 def load_and_clean_data() -> pd.DataFrame:
     df = _get_data(CONN_URL, LOAD_QUERY)
+    print("Load {:d} rows".format(df.shape[0]))
 
     df = df.drop_duplicates(subset=["inn"])
-    df["target"] = df["innovative"].apply(lambda x: int(x is not None))
+    print("Filter complete. New shape is {:d}.".format(df.shape[0]))
+    df["target"] = df["innovative"].apply(lambda x: int(x > 0))
+    print(
+        "Compute target. Shape is {:d}, target sum is {:d}".format(
+            df.shape[0], df["target"].sum()
+        )
+    )
     df = df.drop(columns=["innovative"])
 
     df["has_soc_net"] = df["soc_networks"].apply(lambda x: int(x is not None))
     df["has_website"] = df["website"].apply(lambda x: int(x is not None))
     df = df[df["website"].apply(lambda x: (x is not None) and ("narod.ru" not in x))]
     df = df.drop(columns=["soc_networks", "website"])
+    print("Another filter complete. New shape is {:d}".format(df.shape[0]))
 
     df = _type_cast(
         _change_other_bad_cols(_change_hyphen(df, hyphen_columns), bad_int_columns),
@@ -355,7 +362,6 @@ def load_and_clean_data() -> pd.DataFrame:
     pure_okveds = set(filter(_filter_data_based_on_okved, df["okved_name"].unique()))
     df = df[df["okved_name"].isin(pure_okveds)]
 
-    df["inn"] = df["inn"].astype("int")
     df["innovative_name_tag"] = df["name"].apply(_innovative_name_tag)
 
     for company in innovative_inn_list:
